@@ -57,9 +57,9 @@ export const Navbar = () => {
   };
 
   const navItems = [
-          ['Home', 1, "/"], 
-          ['Stream', 2, "/stream"], 
-          ['Calendar', 3, "/calendar"], 
+    ['Home', 1, "/"], 
+    ['Stream', 2, "/stream"], 
+    ['Calendar', 3, "/calendar"], 
     ['Schedule', 4, "/schedule"]
   ];
 
