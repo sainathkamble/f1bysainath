@@ -26,7 +26,7 @@ export const Stream = () => {
             </div>
           )}
           <iframe
-            src="https://embedrun.store/embed/8e1859af-389f-11f0-afb1-ecf4bbdafde4"
+            src="https://embedrun.store/embed/8dc9b636-3d43-11f0-afb1-ecf4bbdafde4"
             title="Live Stream"
             className={`w-full h-[70vh] transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchSessionData } from '../redux/sessionSlice.js';
+import { LoadingSpinner } from '../components/loadingSpinner.jsx';
+import { Stints } from './Stints'; // Import Stints component
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 seconds
-const UPDATE_INTERVAL = 10000; // 10 seconds
+const UPDATE_INTERVAL = 30000; // Increase to 30 seconds
 
 // Create axios instance with default config
 const api = axios.create({
@@ -32,8 +34,13 @@ api.interceptors.response.use(
 export const LiveStandings = () => {
     const [liveStandings, setLiveStandings] = useState({});
     const [drivers, setDrivers] = useState([]);
+    const [stintsData, setStintsData] = useState([]); // State to hold stints data
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    const handleStintsData = () => {
+      setStintsData(Stints);
+    }
     
     const dispatch = useDispatch();
     const { session, loading: sessionLoading, error: sessionError } = useSelector((state) => state.session);
@@ -43,6 +50,7 @@ export const LiveStandings = () => {
     }, [dispatch]);
 
     const sessionKey = session?.session_key;
+    const sessionType = session?.session_type;
 
     // Fetch list of drivers with retry logic
     useEffect(() => {
@@ -70,7 +78,7 @@ export const LiveStandings = () => {
       fetchDrivers();
     }, [sessionKey]);
 
-    // Fetch standings data with optimized batching
+    // Fetch standings data with optimized batching based on session type
     useEffect(() => {
       if (!sessionKey || drivers.length === 0) return;
 
@@ -79,32 +87,37 @@ export const LiveStandings = () => {
 
       const fetchData = async () => {
         try {
-          // Create an object to store all drivers' standings
           const allDriversStandings = {};
-          
-          // Batch requests in groups of 5
           const batchSize = 5;
+
           for (let i = 0; i < drivers.length; i += batchSize) {
             const batch = drivers.slice(i, i + batchSize);
             const batchPromises = batch.map(async (driver) => {
               try {
-                const response = await api.get(
-                  `https://api.openf1.org/v1/position?session_key=${sessionKey}&driver_number=${driver.driver_number}`
-                );
+                let response;
+                if (sessionType === "Race") {
+                  response = await api.get(`https://api.openf1.org/v1/intervals?session_key=${sessionKey}&driver_number=${driver.driver_number}`);
+                } else {
+                  response = await api.get(`https://api.openf1.org/v1/position?session_key=${sessionKey}&driver_number=${driver.driver_number}`);
+                }
                 if (response.data && response.data.length > 0) {
                   allDriversStandings[driver.driver_number] = response.data[response.data.length - 1];
                 }
               } catch (err) {
-                console.error(`Error fetching data for driver ${driver.driver_number}:`, err);
+                if (err.response?.status === 429) {
+                  console.error(`Rate limit exceeded for driver ${driver.driver_number}. Retrying...`);
+                  await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * 2)); // Wait longer before retrying
+                  return fetchData(); // Retry fetching data for this driver
+                } else {
+                  console.error(`Error fetching data for driver ${driver.driver_number}:`, err);
+                }
               }
             });
 
-            // Wait for batch to complete before proceeding
             await Promise.all(batchPromises);
-            
-            // Add a small delay between batches to avoid rate limiting
+
             if (i + batchSize < drivers.length) {
-              await new Promise(resolve => setTimeout(resolve, 500));
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Increase delay between batches
             }
           }
 
@@ -130,38 +143,35 @@ export const LiveStandings = () => {
         isMounted = false;
         clearInterval(intervalId);
       };
-    }, [sessionKey, drivers]);
+    }, [sessionKey, drivers, sessionType]);
 
-    if(sessionLoading || isLoading) return <p className="text-[#f5f5f5]">Loading data...</p>;
-    if(sessionError || error) return <p className="text-[#f5f5f5]">Error: {sessionError || error}</p>;
+    if(sessionLoading || isLoading) return <LoadingSpinner />;
+    if(sessionError || error) return <LoadingSpinner />;
 
     // Process and sort the standings data
     const processStandingsData = () => {
       if (!liveStandings || Object.keys(liveStandings).length === 0) return [];
       
-      // Create a map of driver data for easy lookup
       const driverMap = {};
       drivers.forEach(driver => {
         driverMap[driver.driver_number] = driver;
       });
       
-      // Process standings data
       const processedData = Object.entries(liveStandings).map(([driverNumber, data]) => {
         const driver = driverMap[driverNumber] || { full_name: `Driver ${driverNumber}` };
         return {
           ...data,
           driver_name: driver.full_name,
-          driver_number: parseInt(driverNumber),
           gap_to_leader: data.gap_to_leader || 0
         };
       });
-      
-      // Sort by gap to leader (ascending)
-      return processedData.sort((a, b) => {
-        const gapA = a.gap_to_leader !== null && a.gap_to_leader !== undefined ? a.gap_to_leader : Infinity;
-        const gapB = b.gap_to_leader !== null && b.gap_to_leader !== undefined ? b.gap_to_leader : Infinity;
-        return gapA - gapB;
-      });
+
+      // Sort based on session type
+      if (sessionType === "Race") {
+        return processedData.sort((a, b) => a.gap_to_leader - b.gap_to_leader);
+      } else {
+        return processedData.sort((a, b) => a.position - b.position);
+      }
     };
 
     const sortedStandings = processStandingsData();
@@ -181,28 +191,37 @@ export const LiveStandings = () => {
                 <tr className="border-b border-[#3a3a3a]">
                   <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Position</th>
                   <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Driver</th>
-                  <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Number</th>
-                  <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Gap to Leader</th>
+                  {sessionType === "Race" && (
+                    <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Gap to Leader</th>
+                  )}
+                  <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Compound</th>
+                  <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Tyres Age</th>
                   <th className="py-3 px-4 text-left text-[#f5f5f5] font-semibold">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {sortedStandings.map((item, index) => (
-                  <tr key={item.driver_number} className={`border-b border-[#3a3a3a] hover:bg-[#333] transition-colors duration-200 ${index % 2 === 0 ? 'bg-[#2a2a2a]' : 'bg-[#252525]'}`}>
-                    <td className="py-3 px-4 text-[#f5f5f5]">{index + 1}</td>
-                    <td className="py-3 px-4 text-[#f5f5f5]">{item.driver_name}</td>
-                    <td className="py-3 px-4 text-[#f5f5f5]">{item.driver_number}</td>
-                    <td className="py-3 px-4 text-[#f5f5f5]">
-                      {index === 0 ? 'Leader' : `${item.gap_to_leader?.toFixed(3)}s`}
-                    </td>
-                    <td className="py-3 px-4 text-[#f5f5f5]">{item.status || 'Running'}</td>
-                  </tr>
-                ))}
+                {sortedStandings.map((item, index) => {
+                  const stintData = stintsData.find(stint => stint.driver_number === item.driver_number);
+                  return (
+                    <tr key={item.driver_number} className={`border-b border-[#3a3a3a] hover:bg-[#333] transition-colors duration-200 ${index % 2 === 0 ? 'bg-[#2a2a2a]' : 'bg-[#252525]'}`}>
+                      <td className="py-3 px-4 text-[#f5f5f5]">{index + 1}</td>
+                      <td className="py-3 px-4 text-[#f5f5f5]">{item.driver_name}</td>
+                      {sessionType === "Race" && (
+                        <td className="py-3 px-4 text-[#f5f5f5]">
+                          {index === 0 ? 'Leader' : `${item.gap_to_leader?.toFixed(3)}s`}
+                        </td>
+                      )}
+                      <td className="py-3 px-4 text-[#f5f5f5]">{stintData ? stintData.compound : 'N/A'}</td>
+                      <td className="py-3 px-4 text-[#f5f5f5]">{stintData ? stintData.lap_end : 'N/A'}</td>
+                      <td className="py-3 px-4 text-[#f5f5f5]">{item.status || 'Running'}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         ) : (
-          <p className="text-[#f5f5f5] text-center p-4">No standings data available</p>
+          <LoadingSpinner />
         )}
       </div>
     );

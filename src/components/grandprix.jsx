@@ -63,7 +63,7 @@ export const GrandPrix = () => {
                         </h2>
                         <div className="bg-[#2a2a2a] rounded-xl p-4 shadow-lg hover:shadow-[#b50000]/10 transition-all duration-300">
                             <div className="aspect-video bg-black/50 rounded-lg flex items-center justify-center border border-[#3a3a3a]">
-                               <iframe className="bg-cover" src="https://embedrun.store/embed/8e1859af-389f-11f0-afb1-ecf4bbdafde4"></iframe>
+                               <iframe className="bg-cover" src="https://embedrun.store/embed/8dc9b636-3d43-11f0-afb1-ecf4bbdafde4"></iframe>
                             </div>
                         </div>
                     </div>

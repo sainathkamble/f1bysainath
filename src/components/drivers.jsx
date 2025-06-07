@@ -6,9 +6,7 @@ import ErrorBoundary from './ErrorBoundary';
 const DriversContent = () => {
   const { driversList, isLoading, error } = useDriversList();
 
-  // Function to get country code for flag API
   const getCountryCode = (code) => {
-    // Convert the country code to lowercase for the flag API
     return code;
   };
 
@@ -26,7 +24,7 @@ const DriversContent = () => {
   }
 
   if (error) {
-    throw new Error(error); // This will be caught by the ErrorBoundary
+    throw new Error(error); 
   }
 
   if (!driversList || driversList.length === 0) {
