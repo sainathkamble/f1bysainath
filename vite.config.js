@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: process.env.BACKEND_URL,
+        target: process.env.VITE_BACKEND_URL,
         changeOrigin: true,
       }
     },
