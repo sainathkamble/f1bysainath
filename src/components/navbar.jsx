@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_BACKEND_URL;
+console.log(API_URL);
 
 export const Navbar = () => {
   const [hoveredItem, setHoveredItem] = useState(null);
