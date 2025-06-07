@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchSessionData } from '../redux/sessionSlice.js';
-import { LoadingSpinner } from '../components/loadingSpinner.jsx';
+import { LoadingSpinner } from '../components/LoadingSpinner.jsx';
 import { Stints } from './Stints'; // Import Stints component
 
 const MAX_RETRIES = 3;
