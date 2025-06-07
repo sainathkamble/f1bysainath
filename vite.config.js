@@ -11,7 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: 'https://f1-server-gzn0.onrender.com',
+        target: process.env.BACKEND_URL,
         changeOrigin: true,
       }
     },

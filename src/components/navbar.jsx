@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+const API_URL = import.meta.env.BACKEND_URL;
+
 export const Navbar = () => {
   const [hoveredItem, setHoveredItem] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -13,7 +15,7 @@ export const Navbar = () => {
     // Check if user is logged in by verifying the access token
     const checkAuthStatus = async () => {
       try {
-        const response = await axios.get('/api/v1/users/current-user', {
+        const response = await axios.get(`${API_URL}/users/current-user`, {
           withCredentials: true
         });
         if (response.data.data) {
