@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchSessionData } from '../redux/sessionSlice.js';
 import { LoadingSpinner } from '../components/LoadingSpinner.jsx';
-import { Stints } from './Stints'; // Import Stints component
+import { Stints } from './stints.jsx';
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 2000; // 2 seconds
