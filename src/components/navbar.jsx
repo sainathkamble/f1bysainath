@@ -54,7 +54,26 @@ export const Navbar = () => {
   const renderAuthButton = () => {
     if (isLoggedIn) {
       useEffect(() => {
-        checkAuthStatus();
+        const checkAuthStatus = async () => {
+          try {
+            const response = await axios.get(`${API_URL}/users/current-user`, { withCredentials: true });
+            if (response.data.data) {
+              setIsLoggedIn(true);
+              setIsRegistered(true);
+              setUserAvatar(response.data.data.avatar);
+            }
+          } catch (error) {
+            setIsLoggedIn(false);
+            setUserAvatar('');
+            const userEmail = localStorage.getItem('userEmail');
+            setIsRegistered(!!userEmail);
+    
+            if (error.response?.status === 401) {
+              localStorage.removeItem('userEmail');
+            }
+          }
+      };
+      checkAuthStatus();
       })
       return (
         <div className="relative group">
