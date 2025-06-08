@@ -53,6 +53,9 @@ export const Navbar = () => {
 
   const renderAuthButton = () => {
     if (isLoggedIn) {
+      useEffect(() => {
+        checkAuthStatus();
+      })
       return (
         <div className="relative group">
           <img 
@@ -88,13 +91,6 @@ export const Navbar = () => {
       );
     }
   };
-
-  if(isLoggedIn){
-    useEffect(() => {
-      checkAuthStatus();
-    })
-  }
-
 
   const NavItem = ({ item, index, route }) => (
     <li
