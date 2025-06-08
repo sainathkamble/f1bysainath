@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from './LoadingSpinner';
 
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 export const Profile = () => {
     const [userData, setUserData] = useState({
         username: '',
@@ -25,7 +27,7 @@ export const Profile = () => {
     useEffect(() => {
         const fetchUserData = async () => {
             try {
-                const response = await axios.get('/api/v1/users/current-user', {
+                const response = await axios.get(`${API_URL}/users/current-user`, {
                     withCredentials: true
                 });
                 setUserData(response.data.data);
@@ -47,7 +49,7 @@ export const Profile = () => {
 
     const handleLogout = async () => {
         try {
-            await axios.post('/api/v1/users/logout', {}, {
+            await axios.post(`${API_URL}/users/logout`, {}, {
                 withCredentials: true
             });
             localStorage.removeItem('userEmail');
@@ -100,7 +102,7 @@ export const Profile = () => {
         }
 
         try {
-            const response = await axios.patch('/api/v1/users/avatar', 
+            const response = await axios.patch(`${API_URL}/users/avatar`, 
                 formData,
                 {
                     withCredentials: true,

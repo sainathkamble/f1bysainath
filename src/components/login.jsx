@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from './LoadingSpinner';
 
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 export const Login = () => {
     const [formData, setFormData] = useState({
         email: '',
@@ -23,7 +25,7 @@ export const Login = () => {
         setError('');
 
         try {
-            const response = await axios.post('/api/v1/users/login', formData, {
+            const response = await axios.post(`${API_URL}/users/login`, formData, {
                 withCredentials: true
             });
             console.log(response.data);

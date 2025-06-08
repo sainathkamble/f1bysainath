@@ -11,44 +11,30 @@ export const Navbar = () => {
   const [userAvatar, setUserAvatar] = useState('');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Check if user is logged in by verifying the access token
-    const checkAuthStatus = async () => {
+  
+  const checkAuthStatus = async () => {
       try {
-        const response = await axios.get(`${API_URL}/users/current-user`, {
-          withCredentials: true
-        });
+        const response = await axios.get(`${API_URL}/users/current-user`, { withCredentials: true });
         if (response.data.data) {
           setIsLoggedIn(true);
           setIsRegistered(true);
           setUserAvatar(response.data.data.avatar);
         }
       } catch (error) {
-        // Handle 401 and other errors
         setIsLoggedIn(false);
         setUserAvatar('');
-        
-        // Check if user is registered by checking localStorage
         const userEmail = localStorage.getItem('userEmail');
         setIsRegistered(!!userEmail);
 
-        // If it's a 401 error, clear any invalid tokens
         if (error.response?.status === 401) {
-          // Clear any stored tokens or auth data
           localStorage.removeItem('userEmail');
-          // You might want to clear other auth-related data here
         }
       }
-    };
-
-    checkAuthStatus();
-  }, []);
+  }
 
   const handleLogout = async () => {
     try {
-      await axios.post('/api/v1/users/logout', {}, {
-        withCredentials: true
-      });
+      await axios.post(`${API_URL}/users/logout`, {}, { withCredentials: true });
       setIsLoggedIn(false);
       setUserAvatar('');
       localStorage.removeItem('userEmail');
@@ -102,6 +88,13 @@ export const Navbar = () => {
       );
     }
   };
+
+  if(isLoggedIn){
+    useEffect(() => {
+      checkAuthStatus();
+    })
+  }
+
 
   const NavItem = ({ item, index, route }) => (
     <li

@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from './LoadingSpinner';
 
+const API_URL = import.meta.env.VITE_BACKEND_URL;
+
 export const Register = () => {
     const [formData, setFormData] = useState({
         fullName: '',
@@ -36,7 +38,7 @@ export const Register = () => {
         }
 
         try {
-            const response = await axios.post('/api/v1/users/register', formDataToSend, {
+            const response = await axios.post(`${API_URL}/users/register`, formDataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
